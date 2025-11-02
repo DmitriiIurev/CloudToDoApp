@@ -2,42 +2,43 @@ name: Frontend
 
 on:
   push:
-    branches: [ main ]
+    paths:
+      - "frontend/**"
   pull_request:
-    branches: [ main ]
+    paths:
+      - "frontend/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./frontend
+
     steps:
-      # Checkout code
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Setup Node.js
-      - name: Setup Node.js
+      - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
-      # Install frontend dependencies
       - name: Install dependencies
         run: npm install
-        working-directory: frontend
 
-      - name: Build code
-        run: npm run build
-        working-directory: frontend
+      - name: Install Angular CLI
+        run: npm install -g @angular/cli
 
-        # 5. Run unit tests met coverage rapport
-      - name: Run unit tests
-        run: npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
-        working-directory: frontend
+      - name: Build Angular project
+        run: ng build --configuration production
 
-      # 6. Upload coverage rapport naar GitHub (optioneel, voor beter overzicht)
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+      - name: Run tests
+        run: ng test --watch=false --browsers=ChromeHeadless
+
+      - name: Code coverage report
+        uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          name: coverage-report
-          path: frontend/coverage
+          filename: coverage/**/lcov.info
+
