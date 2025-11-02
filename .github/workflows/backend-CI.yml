@@ -2,47 +2,40 @@ name: Backend
 
 on:
   push:
-    branches: [ main ]
+    paths:
+      - "backend/**"
   pull_request:
-    branches: [ main ]
+    paths:
+      - "backend/**"
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./backend
+
     steps:
-      # 1. Checkout code
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Setup Node.js
-      - name: Setup Node.js
+      - name: Use Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: npm install
-        working-directory: backend  # pas aan als je backend in een andere map staat
 
-      # 5. Run unit tests en genereer coverage
-      - name: Run unit tests
-        run: npx jest --coverage --passWithNoTests
-        working-directory: backend
+      - name: Build backend
+        run: npm run build
 
-    
-      # 5. Login to Docker Hub
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
+      - name: Test code
+        run: npm test
+
+      - name: Code coverage report
+        uses: irongut/CodeCoverageSummary@v1.3.0
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          filename: coverage/**/lcov.info
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend       # alleen de backend-map
-          file: ./backend/Dockerfile
-          push: true
-          tags: dmitrii0511iurev/be:latest   # en wijzig eventueel 'fe' naar 'be' voor duidelijkheid
